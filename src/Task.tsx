@@ -1,12 +1,34 @@
 import React, { FC, useState } from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { taskState, Task } from "./atoms/task";
+import { filteredTodoListState, filterTasksState } from "./atoms/filterTasks";
 
+export const TaskList = () => {
+  const tasks = useRecoilValue(filteredTodoListState);
+
+  return (
+    <>
+      <TodoListFilters />
+      <TaskInput />
+      <ul>
+        {tasks.map((t, index) => (
+          <TaskItem task={t} key={index} />
+        ))}
+      </ul>
+    </>
+  );
+};
+
+/**
+ *
+ * TaskInput
+ *
+ */
 let id = 0;
 const newTask = (title: string): Task => ({
   taskId: id++,
   title,
-  completed: false,
+  isComplete: false,
 });
 
 const TaskInput = () => {
@@ -30,6 +52,11 @@ const TaskInput = () => {
   );
 };
 
+/**
+ *
+ * TaskItem
+ *
+ */
 const TaskItem: FC<{
   task: Task;
 }> = ({ task }) => {
@@ -37,7 +64,7 @@ const TaskItem: FC<{
 
   const onCheck = () => {
     const newTasks = tasks.map((t) =>
-      t.taskId === task.taskId ? { ...t, completed: !t.completed } : t
+      t.taskId === task.taskId ? { ...t, isComplete: !t.isComplete } : t
     );
     setTasks(newTasks);
   };
@@ -49,24 +76,32 @@ const TaskItem: FC<{
 
   return (
     <li key={task.taskId}>
-      <input type="checkbox" checked={task.completed} onChange={onCheck} />
+      <input type="checkbox" checked={task.isComplete} onChange={onCheck} />
       {task.title}
       <button onClick={onDeleteHandler}>削除</button>
     </li>
   );
 };
 
-export const TaskList = () => {
-  const tasks = useRecoilValue(taskState);
+/**
+ *
+ * TodoListFilters
+ *
+ */
+const TodoListFilters = () => {
+  const [filter, setFilter] = useRecoilState(filterTasksState);
+  const updateFilter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilter(e.target.value);
+  };
 
   return (
     <>
-      <TaskInput />
-      <ul>
-        {tasks.map((t, index) => (
-          <TaskItem task={t} key={index} />
-        ))}
-      </ul>
+      Filter:
+      <select value={filter} onChange={updateFilter}>
+        <option value="Show All">All</option>
+        <option value="Show Completed">Completed</option>
+        <option value="Show Uncompleted">Uncompleted</option>
+      </select>
     </>
   );
 };
